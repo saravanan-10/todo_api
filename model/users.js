@@ -6,7 +6,8 @@ const UsersSchema = new mongoose.Schema({
         unique:true
     },
     password:{
-        type:String
+        type:String,
+        require:true
     },
     profile_image:{
         type:String

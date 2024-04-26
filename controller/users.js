@@ -1,12 +1,20 @@
 const Users = require("../model/users");
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 exports.createUser = async(req, res, next) => {
     console.log(req.body);
-    console.log(req.file);
-
+    //console.log(req.file);
+    
     try{
-        await Users.create({...req.body, profile_image:req.file.path});
+        let hashPassword = await bcrypt.hash(req.body.password, 8)
+
+        if(req.file){
+            await Users.create({email:req.body.email, password:hashPassword, profile_image:req.file.path});
+        } else {
+            await Users.create({email:req.body.email, password:hashPassword});
+        }
+        //await Users.create({email:req.body.email, password:hashPassword, profile_image:req.file.path});
         res.status(200).json({
             success:true
         })
@@ -43,7 +51,10 @@ exports.login = async(req, res, next) => {
         const userListByEmail = await Users.findOne({email:email});
         console.log(userListByEmail);
         if(userListByEmail){
-            if(userListByEmail.password===password){
+
+            let verifyPassword = await bcrypt.compare(password, userListByEmail.password);
+            console.log(verifyPassword);
+            if(verifyPassword){
 
                 let id = userListByEmail._id;
                 let jwtSecretKey = process.env.JWT_SECRET_KEY;
